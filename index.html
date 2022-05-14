@@ -1,0 +1,1783 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <title>Machine Learning - Support Vector Machines</title>
+
+        <link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/ntnuerc.css">
+
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
+        <script src="https://daybrush.com/scenejs/release/latest/dist/scene.min.js"></script>
+		
+        <!-- Printing and PDF exports -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+        <script src="js/ntnu.js"></script>
+    </head>
+    <body>
+        <div class="reveal">
+        <div class="slides">
+            
+<section id="first" data-state="first">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1> Machine Learning - Support Vector Machines</h1>
+
+   <div class="author" style="text-align:center;">
+    
+<p>
+      Jacky Baltes<br>
+      National Taiwan Normal University<br>
+      Taipei, Taiwan<br>
+      <a href="mailto:jacky.baltes@ntnu.edu.tw">jacky.baltes@ntnu.edu.tw</a><br>
+</p>
+
+   </div>
+   <div class="date">
+    14 May 2022
+   </div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-91479229-4d25-4e18-bef7-b80eedbdac80" ><span id="id-91479229-4d25-4e18-bef7-b80eedbdac80"><img id="img-id-91479229-4d25-4e18-bef7-b80eedbdac80"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-38e39375-5b62-41c2-b252-466cb2d73ac7" ><span id="id-38e39375-5b62-41c2-b252-466cb2d73ac7"><img id="img-id-38e39375-5b62-41c2-b252-466cb2d73ac7" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00003_frag_00001" data-state="slide_00003_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">functools</span> <span style="color: #008000; font-weight: bold">import</span> partial
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">np</span>
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #008000; font-weight: bold">as</span> <span style="color: #0000FF; font-weight: bold">plt</span>
+
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">sklearn.model_selection</span> <span style="color: #008000; font-weight: bold">import</span> train_test_split
+<span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">sklearn.svm</span> <span style="color: #008000; font-weight: bold">import</span> SVC
+
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">math</span>
+<span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">random</span>
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-301d8ad4-ca2d-4eaa-b537-3aefcf98b664" ><span id="id-301d8ad4-ca2d-4eaa-b537-3aefcf98b664"><img id="img-id-301d8ad4-ca2d-4eaa-b537-3aefcf98b664"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-7b8e2e44-87a0-4d5a-b08d-20fd6d4f56d1" ><span id="id-7b8e2e44-87a0-4d5a-b08d-20fd6d4f56d1"><img id="img-id-7b8e2e44-87a0-4d5a-b08d-20fd6d4f56d1" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00004_frag_00001" data-state="slide_00004_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span>np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>seed(<span style="color: #666666">123456</span>)
+random<span style="color: #666666">.</span>seed(<span style="color: #666666">123456</span>)
+
+N <span style="color: #666666">=</span> <span style="color: #666666">10</span>
+
+pts <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>random( ( <span style="color: #666666">2</span>, N ) )
+
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure()
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">1</span>,<span style="color: #666666">1</span>,<span style="color: #666666">1</span>)
+
+ax<span style="color: #666666">.</span>plot( pts[<span style="color: #666666">0</span>,:], pts[<span style="color: #666666">1</span>,:], <span style="color: #BA2121">&#39;.&#39;</span>, color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;blue&#39;</span>)
+
+<span style="color: #408080; font-style: italic"># y = ax + b</span>
+line <span style="color: #666666">=</span> ( <span style="color: #666666">0.5</span>, <span style="color: #666666">0.3</span> )
+
+plt<span style="color: #666666">.</span>close()
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-b4190dfd-1931-422d-b788-0d94d07fea35" ><span id="id-b4190dfd-1931-422d-b788-0d94d07fea35"><img id="img-id-b4190dfd-1931-422d-b788-0d94d07fea35"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-36f577ef-b9ac-4ef8-9214-ce00361188b9" ><span id="id-36f577ef-b9ac-4ef8-9214-ce00361188b9"><img id="img-id-36f577ef-b9ac-4ef8-9214-ce00361188b9" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00005_frag_00001" data-state="slide_00005_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span>fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure()
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">1</span>,<span style="color: #666666">1</span>,<span style="color: #666666">1</span>)
+
+ax<span style="color: #666666">.</span>plot( pts[<span style="color: #666666">0</span>,:], pts[<span style="color: #666666">1</span>,:], <span style="color: #BA2121">&#39;.&#39;</span>, color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;blue&#39;</span>)
+
+<span style="color: #408080; font-style: italic"># y = ax + b</span>
+line <span style="color: #666666">=</span> ( <span style="color: #666666">0.5</span>, <span style="color: #666666">0.25</span> )
+
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">calcLine</span>( line, x ):
+  slope, intercept <span style="color: #666666">=</span> line
+  y <span style="color: #666666">=</span> slope <span style="color: #666666">*</span> x <span style="color: #666666">+</span> intercept
+  <span style="color: #008000; font-weight: bold">return</span> y
+
+linePts <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros( ( <span style="color: #666666">2</span>, <span style="color: #666666">2</span> ) )
+
+<span style="color: #008000; font-weight: bold">for</span> i,x <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">enumerate</span>([ <span style="color: #666666">0.0</span>, <span style="color: #666666">1.0</span> ]):
+  linePts[<span style="color: #666666">0</span>,i] <span style="color: #666666">=</span> x
+  linePts[<span style="color: #666666">1</span>,i] <span style="color: #666666">=</span> calcLine( line, x )
+
+ax<span style="color: #666666">.</span>plot( linePts[<span style="color: #666666">0</span>,:], linePts[<span style="color: #666666">1</span>,:], <span style="color: #BA2121">&#39;--&#39;</span>, color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;gray&#39;</span>, linewidth<span style="color: #666666">=2.0</span> )
+
+plt<span style="color: #666666">.</span>close()
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-c3a4c875-2bed-45d5-a64c-049ed86e7c74" ><span id="id-c3a4c875-2bed-45d5-a64c-049ed86e7c74"><img id="img-id-c3a4c875-2bed-45d5-a64c-049ed86e7c74"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-6b866a9f-bff5-43a9-9c37-557fae7f1466" ><span id="id-6b866a9f-bff5-43a9-9c37-557fae7f1466"><img id="img-id-6b866a9f-bff5-43a9-9c37-557fae7f1466" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00006_frag_00001" data-state="slide_00006_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span>fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure()
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">1</span>,<span style="color: #666666">1</span>,<span style="color: #666666">1</span>)
+
+<span style="color: #408080; font-style: italic"># y = ax + b</span>
+line <span style="color: #666666">=</span> ( <span style="color: #666666">0.5</span>, <span style="color: #666666">0.25</span> )
+
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">calcLine</span>( line, x ):
+  slope, intercept <span style="color: #666666">=</span> line
+  y <span style="color: #666666">=</span> slope <span style="color: #666666">*</span> x <span style="color: #666666">+</span> intercept
+  <span style="color: #008000; font-weight: bold">return</span> y
+
+linePts <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros( ( <span style="color: #666666">2</span>, <span style="color: #666666">2</span> ) )
+
+<span style="color: #008000; font-weight: bold">for</span> i,x <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">enumerate</span>([ <span style="color: #666666">0.0</span>, <span style="color: #666666">1.0</span> ]):
+  linePts[<span style="color: #666666">0</span>,i] <span style="color: #666666">=</span> x
+  linePts[<span style="color: #666666">1</span>,i] <span style="color: #666666">=</span> calcLine( line, x )
+
+<span style="color: #408080; font-style: italic"># ax.plot( linePts[0,:], linePts[1,:], &#39;--&#39;, color=&#39;gray&#39;, linewidth=2.0 )</span>
+
+w <span style="color: #666666">=</span> [ <span style="color: #666666">-</span>line[<span style="color: #666666">0</span>], <span style="color: #666666">1</span> ]
+
+pos <span style="color: #666666">=</span> []
+neg <span style="color: #666666">=</span> []
+
+<span style="color: #008000; font-weight: bold">for</span> i,p <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">enumerate</span>( pts<span style="color: #666666">.</span>T ):
+  wp <span style="color: #666666">=</span> p<span style="color: #666666">.</span>dot( w )
+  <span style="color: #008000; font-weight: bold">if</span> wp <span style="color: #666666">&gt;=</span> line[<span style="color: #666666">1</span>]:
+    pos <span style="color: #666666">=</span> pos <span style="color: #666666">+</span> [ p ]
+  <span style="color: #008000; font-weight: bold">else</span>:
+    neg <span style="color: #666666">=</span> neg <span style="color: #666666">+</span> [ p ]
+
+pos <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array( pos )<span style="color: #666666">.</span>T
+neg <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array( neg )<span style="color: #666666">.</span>T
+
+ax<span style="color: #666666">.</span>plot( pos[<span style="color: #666666">0</span>,:], pos[<span style="color: #666666">1</span>,:], <span style="color: #BA2121">&#39;.&#39;</span>, color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;blue&#39;</span> )
+ax<span style="color: #666666">.</span>plot( neg[<span style="color: #666666">0</span>,:], neg[<span style="color: #666666">1</span>,:], <span style="color: #BA2121">&#39;.&#39;</span>, color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;red&#39;</span> )
+
+d1 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;d1&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+plt<span style="color: #666666">.</span>close()
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-f0670cf3-dd17-43a9-a623-68babd38c1aa" ><span id="id-f0670cf3-dd17-43a9-a623-68babd38c1aa"><img id="img-id-f0670cf3-dd17-43a9-a623-68babd38c1aa"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-987c86b2-eaf3-4b56-9e17-a55d97d85b62" ><span id="id-987c86b2-eaf3-4b56-9e17-a55d97d85b62"><img id="img-id-987c86b2-eaf3-4b56-9e17-a55d97d85b62" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00007_frag_00001" data-state="slide_00007_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Sample Domain</h1>
+
+<span id="id-ed0e3dd6-7db6-45b8-a04e-2cb3166558e8" ><span id="id-ed0e3dd6-7db6-45b8-a04e-2cb3166558e8"><img id="img-id-ed0e3dd6-7db6-45b8-a04e-2cb3166558e8"     src="assets/images/d1.svg"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-9b84d294-65bc-494c-9d0b-8d9d39bb0785" ><span id="id-9b84d294-65bc-494c-9d0b-8d9d39bb0785"><img id="img-id-9b84d294-65bc-494c-9d0b-8d9d39bb0785"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-3d90a31a-e06a-4d70-a71b-863a2aa3b734" ><span id="id-3d90a31a-e06a-4d70-a71b-863a2aa3b734"><img id="img-id-3d90a31a-e06a-4d70-a71b-863a2aa3b734" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00008_frag_00001" data-state="slide_00008_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span>fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure()
+ax <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">1</span>,<span style="color: #666666">1</span>,<span style="color: #666666">1</span>)
+
+<span style="color: #408080; font-style: italic"># y = ax + b</span>
+line <span style="color: #666666">=</span> ( <span style="color: #666666">0.5</span>, <span style="color: #666666">0.25</span> )
+
+alines <span style="color: #666666">=</span> []
+<span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #666666">3</span>):
+  l <span style="color: #666666">=</span> ( line[<span style="color: #666666">0</span>]<span style="color: #666666">+</span>random<span style="color: #666666">.</span>gauss(<span style="color: #666666">0</span>,<span style="color: #666666">0.2</span>), line[<span style="color: #666666">1</span>]<span style="color: #666666">+</span>random<span style="color: #666666">.</span>gauss(<span style="color: #666666">0</span>,<span style="color: #666666">0.1</span>),  )
+  alines<span style="color: #666666">.</span>append( l )
+  
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">calcLine</span>( line, x ):
+  slope, intercept <span style="color: #666666">=</span> line
+  y <span style="color: #666666">=</span> slope <span style="color: #666666">*</span> x <span style="color: #666666">+</span> intercept
+  <span style="color: #008000; font-weight: bold">return</span> y
+
+linePts <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros( ( <span style="color: #666666">2</span>, <span style="color: #666666">2</span> ) )
+
+<span style="color: #008000; font-weight: bold">for</span> i,x <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">enumerate</span>([ <span style="color: #666666">0.0</span>, <span style="color: #666666">1.0</span> ]):
+  linePts[<span style="color: #666666">0</span>,i] <span style="color: #666666">=</span> x
+  linePts[<span style="color: #666666">1</span>,i] <span style="color: #666666">=</span> calcLine( line, x )
+
+<span style="color: #408080; font-style: italic"># ax.plot( linePts[0,:], linePts[1,:], &#39;--&#39;, color=&#39;gray&#39;, linewidth=2.0 )</span>
+
+w <span style="color: #666666">=</span> [ <span style="color: #666666">-</span>line[<span style="color: #666666">0</span>], <span style="color: #666666">1</span> ]
+
+pos <span style="color: #666666">=</span> []
+neg <span style="color: #666666">=</span> []
+
+<span style="color: #008000; font-weight: bold">for</span> i,p <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">enumerate</span>( pts<span style="color: #666666">.</span>T ):
+  wp <span style="color: #666666">=</span> p<span style="color: #666666">.</span>dot( w )
+  <span style="color: #008000; font-weight: bold">if</span> wp <span style="color: #666666">&gt;=</span> line[<span style="color: #666666">1</span>]:
+    pos <span style="color: #666666">=</span> pos <span style="color: #666666">+</span> [ p ]
+  <span style="color: #008000; font-weight: bold">else</span>:
+    neg <span style="color: #666666">=</span> neg <span style="color: #666666">+</span> [ p ]
+
+pos <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array( pos )<span style="color: #666666">.</span>T
+neg <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array( neg )<span style="color: #666666">.</span>T
+
+alines <span style="color: #666666">=</span> []
+count <span style="color: #666666">=</span> <span style="color: #666666">0</span>
+<span style="color: #008000; font-weight: bold">while</span> ( <span style="color: #008000">len</span>(alines) <span style="color: #666666">&lt;</span> <span style="color: #666666">3</span> ) <span style="color: #AA22FF; font-weight: bold">and</span> ( count <span style="color: #666666">&lt;</span> <span style="color: #666666">100</span> ):
+    l <span style="color: #666666">=</span> ( line[<span style="color: #666666">0</span>]<span style="color: #666666">+</span>random<span style="color: #666666">.</span>gauss(<span style="color: #666666">0</span>,<span style="color: #666666">0.2</span>), line[<span style="color: #666666">1</span>]<span style="color: #666666">+</span>random<span style="color: #666666">.</span>gauss(<span style="color: #666666">0</span>,<span style="color: #666666">0.1</span>),  )
+    tw <span style="color: #666666">=</span> [<span style="color: #666666">-</span>l[<span style="color: #666666">0</span>], <span style="color: #666666">1</span> ]
+    tpos <span style="color: #666666">=</span> []
+    tneg <span style="color: #666666">=</span> []
+    <span style="color: #008000; font-weight: bold">for</span> i,p <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">enumerate</span>( pts<span style="color: #666666">.</span>T ):
+      wp <span style="color: #666666">=</span> p<span style="color: #666666">.</span>dot( tw )
+      <span style="color: #008000; font-weight: bold">if</span> wp <span style="color: #666666">&gt;=</span> l[<span style="color: #666666">1</span>]:
+        tpos <span style="color: #666666">=</span> tpos <span style="color: #666666">+</span> [ p ]
+      <span style="color: #008000; font-weight: bold">else</span>:
+        tneg <span style="color: #666666">=</span> tneg <span style="color: #666666">+</span> [ p ]
+
+    tpos <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array( tpos )<span style="color: #666666">.</span>T
+    tneg <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array( tneg )<span style="color: #666666">.</span>T
+    <span style="color: #008000; font-weight: bold">if</span> np<span style="color: #666666">.</span>array_equal(tpos, pos):
+      alines<span style="color: #666666">.</span>append( l )
+    count <span style="color: #666666">=</span> count <span style="color: #666666">+</span> <span style="color: #666666">1</span>
+
+ax<span style="color: #666666">.</span>plot( pos[<span style="color: #666666">0</span>,:], pos[<span style="color: #666666">1</span>,:], <span style="color: #BA2121">&#39;.&#39;</span>, color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;blue&#39;</span> )
+ax<span style="color: #666666">.</span>plot( neg[<span style="color: #666666">0</span>,:], neg[<span style="color: #666666">1</span>,:], <span style="color: #BA2121">&#39;.&#39;</span>, color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;red&#39;</span> )
+
+colors <span style="color: #666666">=</span> [ <span style="color: #BA2121">&#39;yellow&#39;</span>, <span style="color: #BA2121">&#39;cyan&#39;</span>, <span style="color: #BA2121">&#39;magenta&#39;</span> ]
+
+<span style="color: #008000; font-weight: bold">for</span> li, l  <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">enumerate</span>( alines ):
+  linePts <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros( ( <span style="color: #666666">2</span>, <span style="color: #666666">2</span> ) )
+
+  <span style="color: #008000; font-weight: bold">for</span> i,x <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">enumerate</span>([ <span style="color: #666666">0.0</span>, <span style="color: #666666">1.0</span> ]):
+    linePts[<span style="color: #666666">0</span>,i] <span style="color: #666666">=</span> x
+    linePts[<span style="color: #666666">1</span>,i] <span style="color: #666666">=</span> calcLine( l, x )
+  ax<span style="color: #666666">.</span>plot( linePts[<span style="color: #666666">0</span>,:], linePts[<span style="color: #666666">1</span>,:], <span style="color: #BA2121">&#39;--&#39;</span>, linewidth<span style="color: #666666">=2</span>, label<span style="color: #666666">=</span><span style="color: #BA2121">f&#39;L</span><span style="color: #BB6688; font-weight: bold">{</span>li<span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">: </span><span style="color: #BB6688; font-weight: bold">{</span><span style="color: #666666">0</span><span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">5.2f</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">,</span><span style="color: #BB6688; font-weight: bold">{</span><span style="color: #666666">1</span><span style="color: #BB6688; font-weight: bold">:</span><span style="color: #BA2121">5.2f</span><span style="color: #BB6688; font-weight: bold">}</span><span style="color: #BA2121">&#39;</span><span style="color: #666666">.</span>format(l[<span style="color: #666666">0</span>], l[<span style="color: #666666">1</span>] ) )
+ax<span style="color: #666666">.</span>legend()
+
+d2 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;d2&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+plt<span style="color: #666666">.</span>close()
+    
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-b759a691-5c97-4d76-b96b-7d69a48a9955" ><span id="id-b759a691-5c97-4d76-b96b-7d69a48a9955"><img id="img-id-b759a691-5c97-4d76-b96b-7d69a48a9955"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-e410944b-602d-4028-9e3e-f58fc8c92651" ><span id="id-e410944b-602d-4028-9e3e-f58fc8c92651"><img id="img-id-e410944b-602d-4028-9e3e-f58fc8c92651" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00009_frag_00001" data-state="slide_00009_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Which Line is the Correct One?</h1>
+
+<span id="id-cd3dcee7-45b1-4970-a8b4-4135439b006f" ><span id="id-cd3dcee7-45b1-4970-a8b4-4135439b006f"><img id="img-id-cd3dcee7-45b1-4970-a8b4-4135439b006f"     src="assets/images/d2.svg"/></span>
+</span>
+
+
+<div class="jb-text">
+<p>Impossible to tell which one is the correct one without knowing all the points
+and their classification</p>
+<p><b>Inductive leap</b>: guess at what the other points look like based on the training data 
+that we have available</p>
+<p>Machine learning algorithms must <b>generalize</b> correctly</p>
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-7ec8653c-3808-495e-b3d6-2bf34d1893fe" ><span id="id-7ec8653c-3808-495e-b3d6-2bf34d1893fe"><img id="img-id-7ec8653c-3808-495e-b3d6-2bf34d1893fe"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-d91698a6-0439-4500-a2c4-08f779f604d7" ><span id="id-d91698a6-0439-4500-a2c4-08f779f604d7"><img id="img-id-d91698a6-0439-4500-a2c4-08f779f604d7" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00010_frag_00001" data-state="slide_00010_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+<div class="jb-input jb-render jb-code" style="text-align:center">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-input-code jb-render">
+<div class="highlight" style="background: #f8f8f8; color:#101010;display=inline-block;"><pre style="line-height: 125%"><span></span>np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>seed(<span style="color: #666666">1200</span>)
+random<span style="color: #666666">.</span>seed(<span style="color: #666666">1200</span>)
+
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">generateDataPoints</span>( N, line ):
+  pts <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>random( ( <span style="color: #666666">2</span>, N ) )
+  w <span style="color: #666666">=</span> [ <span style="color: #666666">-</span>line[<span style="color: #666666">0</span>], <span style="color: #666666">1</span> ]
+
+  pos <span style="color: #666666">=</span> []
+  neg <span style="color: #666666">=</span> []
+
+  <span style="color: #008000; font-weight: bold">for</span> i,p <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">enumerate</span>( pts<span style="color: #666666">.</span>T ):
+    wp <span style="color: #666666">=</span> p<span style="color: #666666">.</span>dot( w )
+    <span style="color: #008000; font-weight: bold">if</span> wp <span style="color: #666666">&gt;=</span> line[<span style="color: #666666">1</span>]:
+      pos <span style="color: #666666">=</span> pos <span style="color: #666666">+</span> [ p ]
+    <span style="color: #008000; font-weight: bold">else</span>:
+      neg <span style="color: #666666">=</span> neg <span style="color: #666666">+</span> [ p ]
+
+  pos <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array( pos )<span style="color: #666666">.</span>T
+  neg <span style="color: #666666">=</span> np<span style="color: #666666">.</span>array( neg )<span style="color: #666666">.</span>T
+  <span style="color: #008000; font-weight: bold">return</span> pos, neg 
+
+
+
+<span style="color: #408080; font-style: italic"># y = ax + b</span>
+line <span style="color: #666666">=</span> ( <span style="color: #666666">0.5</span>, <span style="color: #666666">0.25</span> )
+
+<span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">calcLine</span>( line, x ):
+  slope, intercept <span style="color: #666666">=</span> line
+  y <span style="color: #666666">=</span> slope <span style="color: #666666">*</span> x <span style="color: #666666">+</span> intercept
+  <span style="color: #008000; font-weight: bold">return</span> y
+
+alines <span style="color: #666666">=</span> []
+<span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>(<span style="color: #666666">3</span>):
+  l <span style="color: #666666">=</span> ( line[<span style="color: #666666">0</span>]<span style="color: #666666">+</span>random<span style="color: #666666">.</span>gauss(<span style="color: #666666">0</span>,<span style="color: #666666">0.2</span>), line[<span style="color: #666666">1</span>]<span style="color: #666666">+</span>random<span style="color: #666666">.</span>gauss(<span style="color: #666666">0</span>,<span style="color: #666666">0.1</span>),  )
+  alines<span style="color: #666666">.</span>append( l )
+
+fig <span style="color: #666666">=</span> plt<span style="color: #666666">.</span>figure( figsize<span style="color: #666666">=</span>(<span style="color: #666666">12</span>,<span style="color: #666666">12</span>) )
+
+ax <span style="color: #666666">=</span> []
+NPoints <span style="color: #666666">=</span> [ <span style="color: #666666">50</span>, <span style="color: #666666">500</span>, <span style="color: #666666">5000</span> ]
+
+<span style="color: #008000; font-weight: bold">for</span> i <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">range</span>( <span style="color: #008000">len</span>( NPoints ) ):
+  axx <span style="color: #666666">=</span> fig<span style="color: #666666">.</span>add_subplot(<span style="color: #666666">1</span>,<span style="color: #008000">len</span>(NPoints),i<span style="color: #666666">+1</span>)
+  ax<span style="color: #666666">.</span>append( axx )
+
+<span style="color: #008000; font-weight: bold">for</span> Ni,N <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">enumerate</span>( NPoints ):
+  pos, neg <span style="color: #666666">=</span> generateDataPoints( N, line )
+  ax[Ni]<span style="color: #666666">.</span>plot( pos[<span style="color: #666666">0</span>,:], pos[<span style="color: #666666">1</span>,:], <span style="color: #BA2121">&#39;.&#39;</span>, color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;blue&#39;</span>)
+  ax[Ni]<span style="color: #666666">.</span>plot( neg[<span style="color: #666666">0</span>,:], neg[<span style="color: #666666">1</span>,:], <span style="color: #BA2121">&#39;.&#39;</span>, color<span style="color: #666666">=</span><span style="color: #BA2121">&#39;red&#39;</span>)
+  
+<span style="color: #408080; font-style: italic"># ax.plot( linePts[0,:], linePts[1,:], &#39;--&#39;, color=&#39;gray&#39;, linewidth=2.0 )</span>
+
+  colors <span style="color: #666666">=</span> [ <span style="color: #BA2121">&#39;black&#39;</span>, <span style="color: #BA2121">&#39;yellow&#39;</span>, <span style="color: #BA2121">&#39;cyan&#39;</span>, <span style="color: #BA2121">&#39;magenta&#39;</span> ]
+
+  <span style="color: #008000; font-weight: bold">for</span> li, l  <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">enumerate</span>( [ line ] <span style="color: #666666">+</span> alines ):
+    linePts <span style="color: #666666">=</span> np<span style="color: #666666">.</span>zeros( ( <span style="color: #666666">2</span>, <span style="color: #666666">2</span> ) )
+
+    <span style="color: #008000; font-weight: bold">for</span> i,x <span style="color: #AA22FF; font-weight: bold">in</span> <span style="color: #008000">enumerate</span>([ <span style="color: #666666">0.0</span>, <span style="color: #666666">1.0</span> ]):
+      linePts[<span style="color: #666666">0</span>,i] <span style="color: #666666">=</span> x
+      linePts[<span style="color: #666666">1</span>,i] <span style="color: #666666">=</span> calcLine( l, x )
+    ax[Ni]<span style="color: #666666">.</span>plot( linePts[<span style="color: #666666">0</span>,:], linePts[<span style="color: #666666">1</span>,:], <span style="color: #BA2121">&#39;--&#39;</span>, color <span style="color: #666666">=</span> colors[li], linewidth<span style="color: #666666">=3.0</span>, label<span style="color: #666666">=</span><span style="color: #BA2121">&#39;L: </span><span style="color: #BB6688; font-weight: bold">{0:5.2f}</span><span style="color: #BA2121">,</span><span style="color: #BB6688; font-weight: bold">{1:5.2f}</span><span style="color: #BA2121">&#39;</span><span style="color: #666666">.</span>format(l[<span style="color: #666666">0</span>], l[<span style="color: #666666">1</span>] ) )
+  ax[Ni]<span style="color: #666666">.</span>legend()
+
+d3 <span style="color: #666666">=</span> addJBFigure(<span style="color: #BA2121">&quot;d3&quot;</span>, <span style="color: #666666">0</span>, <span style="color: #666666">0</span>, fig )
+plt<span style="color: #666666">.</span>close()
+    
+</pre></div>
+
+</div><!-- end of jb-input-code jb-render -->
+
+</div>
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-a8d71ff9-aa19-4d3c-ae2f-5b3a2b3df840" ><span id="id-a8d71ff9-aa19-4d3c-ae2f-5b3a2b3df840"><img id="img-id-a8d71ff9-aa19-4d3c-ae2f-5b3a2b3df840"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-7aa6ae40-cdf6-4093-8c77-a7242c4f4228" ><span id="id-7aa6ae40-cdf6-4093-8c77-a7242c4f4228"><img id="img-id-7aa6ae40-cdf6-4093-8c77-a7242c4f4228" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00011_frag_00001" data-state="slide_00011_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Sample Domain</h1>
+
+<div style="width:80%">
+<span id="id-b4f249b3-6771-486b-b1f5-8f77b058de2b" ><span id="id-b4f249b3-6771-486b-b1f5-8f77b058de2b"><img id="img-id-b4f249b3-6771-486b-b1f5-8f77b058de2b"     src="assets/images/d3.svg"/></span>
+</span>
+
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-9b4bb36d-ba3c-4761-a8d9-abbeacc9a07d" ><span id="id-9b4bb36d-ba3c-4761-a8d9-abbeacc9a07d"><img id="img-id-9b4bb36d-ba3c-4761-a8d9-abbeacc9a07d"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-0cfdadfb-a71c-43c9-bc5b-e387fea4231d" ><span id="id-0cfdadfb-a71c-43c9-bc5b-e387fea4231d"><img id="img-id-0cfdadfb-a71c-43c9-bc5b-e387fea4231d" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00012_frag_00001" data-state="slide_00012_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Support Vector Machines</h1>
+
+<div class="jb-text">
+<p>Seperate <b>all</b> the points, even the unknwon ones, correctly by dividing 
+them with a line</p>
+\[
+ y = +1 \ if\  \mbox{w^T} x > 0\\
+ y = -1 \ if\  \mbox{w^T} x < 0
+\]
+<p>Goal: Find \( w \)
+</div>
+
+ 
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-947b1541-283a-4c3f-95de-18ebba35458b" ><span id="id-947b1541-283a-4c3f-95de-18ebba35458b"><img id="img-id-947b1541-283a-4c3f-95de-18ebba35458b"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-81946d5c-efc3-459f-a77a-294e00e9c4d9" ><span id="id-81946d5c-efc3-459f-a77a-294e00e9c4d9"><img id="img-id-81946d5c-efc3-459f-a77a-294e00e9c4d9" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00013_frag_00001" data-state="slide_00013_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Support Vector Machines</h1>
+
+<div class="jb-text">
+<p>Since we are limited to the training set, there are multiple solutions. 
+All of those work equally well on the training data</p>
+<p>How do we select one of those lines (with the hope of providing the best generalization ability)</p>
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-53723377-2bba-4200-8f08-b89a8f0346f6" ><span id="id-53723377-2bba-4200-8f08-b89a8f0346f6"><img id="img-id-53723377-2bba-4200-8f08-b89a8f0346f6"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-705fada4-1799-429f-b22a-8e198ef10f99" ><span id="id-705fada4-1799-429f-b22a-8e198ef10f99"><img id="img-id-705fada4-1799-429f-b22a-8e198ef10f99" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00014_frag_00001" data-state="slide_00014_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>SVM: Intuition</h1>
+
+<div class="jb-text">
+<p>Assume that closer points are more likely to be classified the same</p>
+<p>Assume that the training data is noisy (shift in position)</p>
+<p>SVM Heuristic: prefer lines/hypothesis that have a large safety margin</p>
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-c1cc83b2-be3c-41c7-b6c7-e059309d26e1" ><span id="id-c1cc83b2-be3c-41c7-b6c7-e059309d26e1"><img id="img-id-c1cc83b2-be3c-41c7-b6c7-e059309d26e1"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-bec80bb4-d939-4141-8abd-970d715bed94" ><span id="id-bec80bb4-d939-4141-8abd-970d715bed94"><img id="img-id-bec80bb4-d939-4141-8abd-970d715bed94" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00015_frag_00001" data-state="slide_00015_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Margin</h1>
+
+<span id="id-77b94a39-41fd-487a-96bc-cf973b129e5c" ><span id="id-77b94a39-41fd-487a-96bc-cf973b129e5c"><img id="img-id-77b94a39-41fd-487a-96bc-cf973b129e5c"     src="assets/images/m1.png"/></span>
+</span>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-e1099f4b-c373-492f-83fc-c8d4ec5b4977" ><span id="id-e1099f4b-c373-492f-83fc-c8d4ec5b4977"><img id="img-id-e1099f4b-c373-492f-83fc-c8d4ec5b4977"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-4beafec1-e2a7-487d-82fe-a3f18271159e" ><span id="id-4beafec1-e2a7-487d-82fe-a3f18271159e"><img id="img-id-4beafec1-e2a7-487d-82fe-a3f18271159e" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00016_frag_00001" data-state="slide_00016_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Margin</h1>
+
+<div class="jb-text">
+<p>Calculate distance to the hyperplane/(line in 2D) for point \( x \)</p>
+\[
+  d(x) = \frac{w \cdot x }{||w||}
+\]
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-037bbccf-7018-48d6-ad7a-dbf15ba22ead" ><span id="id-037bbccf-7018-48d6-ad7a-dbf15ba22ead"><img id="img-id-037bbccf-7018-48d6-ad7a-dbf15ba22ead"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-b04b631e-6ced-4f66-b8c5-a6c0af1539b8" ><span id="id-b04b631e-6ced-4f66-b8c5-a6c0af1539b8"><img id="img-id-b04b631e-6ced-4f66-b8c5-a6c0af1539b8" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00017_frag_00001" data-state="slide_00017_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Margin</h1>
+
+
+<span id="id-e1b73c7d-cdce-43ca-ab06-1fe47bf433a5" ><span id="id-e1b73c7d-cdce-43ca-ab06-1fe47bf433a5"><img id="img-id-e1b73c7d-cdce-43ca-ab06-1fe47bf433a5"     src="assets/images/d4.svg"/></span>
+</span>
+
+
+<div class="jb-text">
+<p>Add a bias term \( b \) for the margin to the hyperplane \( w \cdot x + b = 0 \)
+<p>Proof that \( w \) is orthogonal to the hyperplane</p>
+<p>Take points p1 and p2, which are both on the margin (so-called support vectors)</p>
+\[
+  w \cdot p_1 + b = 0\\
+  w \cdot p_2 + b = 0\\
+  w \cdot p_1 + b = w \cdot p_2 + b\\
+  w \cdot( p_2 - p_1 ) = 0
+\]
+
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-9007f3ad-2170-4036-b9b4-1f4396aef17f" ><span id="id-9007f3ad-2170-4036-b9b4-1f4396aef17f"><img id="img-id-9007f3ad-2170-4036-b9b4-1f4396aef17f"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-d7987020-125b-4f6a-bde7-6b9ae6522f7f" ><span id="id-d7987020-125b-4f6a-bde7-6b9ae6522f7f"><img id="img-id-d7987020-125b-4f6a-bde7-6b9ae6522f7f" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00018_frag_00001" data-state="slide_00018_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Distance to Hyperplane with Bias</h1>
+
+<div>
+<p>
+\[
+  d(x) = \frac{|w \cdot x + b|}{||w||} 
+\]
+</p>
+<p>
+Proof: length is the distance perpendicular to the decision surface (same direction as w)
+</p>
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-daaa55d8-5561-467a-925c-77387ac2df5b" ><span id="id-daaa55d8-5561-467a-925c-77387ac2df5b"><img id="img-id-daaa55d8-5561-467a-925c-77387ac2df5b"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-f061eaac-6ce1-468c-ae38-090b7cbcbb35" ><span id="id-f061eaac-6ce1-468c-ae38-090b7cbcbb35"><img id="img-id-f061eaac-6ce1-468c-ae38-090b7cbcbb35" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00019_frag_00001" data-state="slide_00019_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>SVM</h1>
+
+<div class="jb-text">
+<p>Find \( w \) such that the distance between all points and the decision surface is
+maximized</p>
+<p>Classes as [+1, -1], depending on which side of the decision surface the points lie on</p>
+<p>
+\[
+  \gamma = \min_{i} \frac{y_i ( w \cdot x_i + b ) }{||w||}
+\]
+</p> 
+<p>If a point is misclassified, then the minimum will be negative
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-dd7e45b8-9ac1-4ccd-a27d-97afee50f99f" ><span id="id-dd7e45b8-9ac1-4ccd-a27d-97afee50f99f"><img id="img-id-dd7e45b8-9ac1-4ccd-a27d-97afee50f99f"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-57284e52-7861-4594-9295-392710d1d30d" ><span id="id-57284e52-7861-4594-9295-392710d1d30d"><img id="img-id-57284e52-7861-4594-9295-392710d1d30d" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00020_frag_00001" data-state="slide_00020_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>SVM Motivation</h1>
+
+<div class="jb-text">
+<p>Find the parameters \( w \) and \( b \) that maximize \( \gamma \)</p>
+<p>
+\[
+\max_{w,b} \gamma = \max_{w,b} \min_i \frac{y_i * (w \cdot x_i + b ) }{||w||}
+\]
+</p>
+<p>Scale margin to +1,-1. If we multiply \( w \) and \( b \) by a constant \( c \)</p>
+\[
+  \frac{y_i ( c w \cdot x_i + cb )}{||cw||} = \frac{y_i ( w \cdot x_i + b )}{||w||}
+\]
+<p>Fix scale so that the minimum margin is always 1</p>
+\[
+  y_{ci} ( w \cdot x_{ci} + b ) = 1
+\],
+where point \( ci \) is a point that has the minimum distance to the decision surface/hyperplane
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-fd26a68d-afc7-4a59-8755-5983d3c27cb7" ><span id="id-fd26a68d-afc7-4a59-8755-5983d3c27cb7"><img id="img-id-fd26a68d-afc7-4a59-8755-5983d3c27cb7"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-5d279e34-f272-4d86-bdac-dd0f2e0c7ade" ><span id="id-5d279e34-f272-4d86-bdac-dd0f2e0c7ade"><img id="img-id-5d279e34-f272-4d86-bdac-dd0f2e0c7ade" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00021_frag_00001" data-state="slide_00021_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>SVM Objective Function</h1>
+
+<div class="jb-text">
+<p>For all data, we now have</p>
+\[
+y_{i} ( w \cdot x_{i} + b ) \geq 1
+\]
+<p> and at least for point \( ci \), we have</p>
+\[
+y_{ci} ( w \cdot x_{ci} + b ) = 1
+\]
+<p>Then the margin is given by \( \frac{1}{||w||} \)</p>
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-b799d161-9319-4a2f-a7b7-fb60cf970f4a" ><span id="id-b799d161-9319-4a2f-a7b7-fb60cf970f4a"><img id="img-id-b799d161-9319-4a2f-a7b7-fb60cf970f4a"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-6c007851-b35f-42c9-8e53-8c76643a3149" ><span id="id-6c007851-b35f-42c9-8e53-8c76643a3149"><img id="img-id-6c007851-b35f-42c9-8e53-8c76643a3149" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00022_frag_00001" data-state="slide_00022_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>SVM: Quadratic Programming</h1>
+
+<div class="jb-text">
+<p>Optimization Criteria</p>
+\[
+\underset{w,b}{\min} \frac{1}{2} ||w||^2\\
+y_i ( w \cdot x_i + b ) \geq 1, \forall i
+\]
+<p>This an example of a quadratic programming problem. Efficient algorithms to 
+solve a quadratic programming problem exist and are well understood</p>
+<p>Uses Lagrange multipliers to find a solution</p>
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-dae85363-0825-41aa-8b8a-1a01ba090102" ><span id="id-dae85363-0825-41aa-8b8a-1a01ba090102"><img id="img-id-dae85363-0825-41aa-8b8a-1a01ba090102"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-836f8587-b241-43e7-8007-6afdc2d255c0" ><span id="id-836f8587-b241-43e7-8007-6afdc2d255c0"><img id="img-id-836f8587-b241-43e7-8007-6afdc2d255c0" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00023_frag_00001" data-state="slide_00023_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<div class="jb-text">
+<p>This formulation of the support vector machine is called a <b>hard margin</b> classifier.
+Assumes that a \( w \) that can correctly classify all instances in the training data exists</p>
+<p>If we have noise in the training data, then that may be impossible</p>
+<p>Extend our model to <b>soft margin</b> classifiers, by adding a penalty term for each
+point that is misclassified based on the distance to the decision surface</p>
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-5565d4bf-54bf-4e43-871c-70a5bfd861ef" ><span id="id-5565d4bf-54bf-4e43-871c-70a5bfd861ef"><img id="img-id-5565d4bf-54bf-4e43-871c-70a5bfd861ef"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-4a37c066-17c0-48f1-8baa-40303a5fb308" ><span id="id-4a37c066-17c0-48f1-8baa-40303a5fb308"><img id="img-id-4a37c066-17c0-48f1-8baa-40303a5fb308" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00024_frag_00001" data-state="slide_00024_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Soft Margin Classifier</h1>
+
+<div style="width:50%">
+<span id="id-f8593083-a377-48b2-a92e-7bbcd29e7cac" ><span id="id-f8593083-a377-48b2-a92e-7bbcd29e7cac"><img id="img-id-f8593083-a377-48b2-a92e-7bbcd29e7cac"     src="assets/images/sm1.png"/></span>
+</span>
+
+</div>
+
+<div class="jb-text">
+<p>Extend our optimization criteria to include a term for all misclassified points by adding
+slack variables \( \xi_j \) for all misclassified points, where \( \xi_j \) is the 
+distance between the misclassified point \( x_j \) and the decision surface</p>
+<p></p>
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-87429030-3bb8-4a3e-988a-092bf4b65186" ><span id="id-87429030-3bb8-4a3e-988a-092bf4b65186"><img id="img-id-87429030-3bb8-4a3e-988a-092bf4b65186"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-3d7b4210-d526-4adb-9e15-42526e41f154" ><span id="id-3d7b4210-d526-4adb-9e15-42526e41f154"><img id="img-id-3d7b4210-d526-4adb-9e15-42526e41f154" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00025_frag_00001" data-state="slide_00025_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>Soft Margin Classifiers</h1>
+
+<div class="jb-text">
+<p>Soft margin optimization criteria. Minimize both \( w^2 \) and the sum
+of the slack variables \( \xi_j \)</p>
+<p>Constant \( C \) that can change the emphasis of the misclassified data</p>
+<ul>
+<li>If C=\( \infty \), then very high penalty</li>
+<li>If C = 0, then correctness of labeling does not matter</li>
+</ul>
+\[
+\underset{w,b}{\min} \frac{1}{2} ||w||^2 + C \sum_j \xi_j \\
+y_i ( w \cdot x_i + b ) \geq 1 - \xi_j, \forall j, \xi_j \geq 0
+\]
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-cf313f46-8532-4976-9b23-835f50a71af4" ><span id="id-cf313f46-8532-4976-9b23-835f50a71af4"><img id="img-id-cf313f46-8532-4976-9b23-835f50a71af4"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-d89001f9-5100-4abb-bb29-f7667fe1ac5f" ><span id="id-d89001f9-5100-4abb-bb29-f7667fe1ac5f"><img id="img-id-d89001f9-5100-4abb-bb29-f7667fe1ac5f" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00026_frag_00001" data-state="slide_00026_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+
+<h1>SVM: Observations</h1>
+
+<div class="jb-text">
+<p>The points that are on the margin, i.e., \( y_i ( w \cdot x_i + b ) = 1 \) are called 
+the <b>support vectors</b></p>
+<p>The decision surface is complete determined by the support vectors only. The other
+points do not matter. They do not change the position of the decision surface</p>
+</div>
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-a287370f-12c5-4a41-bad4-615e11ae75ad" ><span id="id-a287370f-12c5-4a41-bad4-615e11ae75ad"><img id="img-id-a287370f-12c5-4a41-bad4-615e11ae75ad"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-3d07c74b-597b-4790-b264-3cfca78fdfdb" ><span id="id-3d07c74b-597b-4790-b264-3cfca78fdfdb"><img id="img-id-3d07c74b-597b-4790-b264-3cfca78fdfdb" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00027_frag_00001" data-state="slide_00027_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXoAAAEICAYAAABRSj9aAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAADh0RVh0U29mdHdhcmUAbWF0cGxvdGxpYiB2ZXJzaW9uMy4yLjIsIGh0dHA6Ly9tYXRwbG90bGliLm9yZy+WH4yJAAAgAElEQVR4nO3de3gV1bn48e+bO4EEAuGecNGEiyigRsBirYgXQFFQqqBVOEU5VWmt9rTSHn/V2tZj26cePfVKBcVqRcUSo0UQRFpvKImCCgSIiJIQIICQBAK5vb8/ZoI79x3Yyey9836eZz/ZM2vtmXeCvnuy1pq1RFUxxhgTviK8DsAYY0zrskRvjDFhzhK9McaEOUv0xhgT5izRG2NMmLNEb4wxYc4SvTEnSES+KyJbvI7DmOZYojcBJyLXiUi2iJSKSKGIvCEi53kdly8RuUBE8lv4GRWRtJptVX1HVQcHPjoQkRgRuVdEtonIYRHZISILRWTASRxzgHsNUYGL1IQCS/QmoETkTuAh4H6gJ9APeAy40su4QtAS4ArgOqAzMALIAcZ7GZQJUapqL3sF5IWTkEqB7zdRJxbni2CX+3oIiHXLLgDygV8Ae4FCYAowCdgKHAB+5XOse3ES4otACfAxMMKnXIE0n+1ngN8BHYEyoNqNtxToA4wCPgAOuud+BIhxP/tv93iH3frX1sTrc/yhwBr38xuBK+qc+1Hgn26sHwKnNvI7usiNL7WJ32MfIMv9neQBN/uUjQKygWJgD/Cgu/9r9xpqrvlcIA34F3AI2Ae86PV/R/YK/Mvu6E0gnQvEAUubqPPfwBhgJM5d6ijgbp/yXu4x+gK/Bv4K/AA4G/gu8P9EZKBP/SuBl4GuwN+BTBGJbipIVT0MTAR2qWon97ULqALuAJLdaxkP3Op+5nz34yPc+i/6HtM952vAm0AP4MfA8yLi27QzHfgNkISTnH/fSIgXAR+p6s4mLmMxzpdiH2AacL+IXOiWPQw8rKqJwKnAS+7+mmvo4l7DB8Bv3ZiTgBTgL02c04SooE30bnvkXhH53I+654vIxyJSKSLT6pTNdNs5t4nIzNaL2ADdgH2qWtlEneuB+1R1r6oW4SS+G3zKK4Dfq2oFTjJLxklaJaq6EdiE8wVRI0dVl7j1H8T5khhzIsGrao6qrlXVSlXdATwJfM/Pj48BOgEPqGq5qq4GXgdm+NRZqqofub+f53G+7BrSDecvigaJSCowFrhLVY+q6nrgKeBGt0oFkCYiyapaqqprm4i7AugP9HGP9W7zl2pCTdAmepw/dSf4WfdrYBbOHd1xItIVuAcYjXPneI+IJAUuRFPHfiC5mc6+PsBXPttfufuOH0NVq9z3Ze7PPT7lZTgJtcbxu15Vrebbu9wWE5FBIvK6iOwWkWKcfoZkPz/eB9jpxlDjK5y/TGrs9nl/hNrX4Ws/0LuZcx1Q1ZJGzjUbGATkisg6Ebm8iWP9AhDgIxHZKCI/bKKuCVFBm+hV9d847Y/HicipIrJcRHJE5B0RGeLW3aGqn+K0ufq6FFipqgdU9RtgJf5/eZiW+wA4htOu3phdOHeQNfq5+05Uas0bEYnAaX6oOd4RIN6nbi+f9w1N2/o4kAuku80ev8JJgv7YBaS6MdToBxT4+Xlfq4BRIpLSxLm6ikhCQ+dS1W2qOgOnCekPwBIR6UgD16yqu1X1ZlXtA/wn8JjvyCITHoI20TdiPvBjVT0b+C+c0RxN6YvPHR/O3V7fRuqak6Sqh3Da1R8VkSkiEi8i0SIyUUT+6FZ7AbhbRLqLSLJb/7mTOO3ZInKV+1fET3G+aGqaKtYD14lIpIhMoHYzzB6gm4h09tmXgNOBWereRNxS51x7gFMaieNDnC+WX7jXfAEwGaf5qUVUdRXOTclSETlbRKJEJEFEfiQiP3Tb7t8H/kdE4kRkOM5d/HMAIvIDEenu/nVx0D1sNVDk/jx+DSLyfZ8vlG9wvgzq3jCZEBcyiV5EOgHfAV4WkfU47adN/XlrPKCqfwbuxOlgLcL5op0LZLpVfoczIuRT4DOckTK/O4lTvoozAuYbnLb+q9z2eoDbcZLtQZy+gZoYUNVcnC+d7SJyUET64Nw8XIczKuavOKN5fN0LLHLrX1Pnusvdc03EGb3yGHCje54TMQ1Y5sZwCPgcyMC52wen7X8Azt39UuAe9wsCnL9aN4pIKU7H7HRVLVPVIzgdwO+51zAGOAf40K2bBdyuqttPMGYTpEQ1eBcecR8OeV1VTxeRRGCLqjaa3EXkGbf+End7BnCBqv6nu/0ksEZVX2jt2E3rE5F7cYZP/sDrWIwJZiFzR6+qxcCXIvJ9AHGMaOZjK4BLRCTJ7YS9xN1njDHtRtAmehF5Aadzb7CI5IvIbJw/v2eLyAacB1KudOue4z7O/n3gSRHZCKCqB3DGCa9zX/e5+4wxpt0I6qYbY4wxJy9o7+iNMcYERlDOYpecnKwDBgzwOgxjjAkZOTk5+1S1e0NlQZnoBwwYQHZ2ttdhGGNMyBCRrxors6YbY4wJc5bojTEmzFmiN8aYMBeUbfQNqaioID8/n6NHj3odStCJi4sjJSWF6Ogmp2E3xrRTIZPo8/PzSUhIYMCAAYj4O6Fg+FNV9u/fT35+PgMHDmz+A8aYdidkmm6OHj1Kt27dLMnXISJ069bN/tIxxjQqZBI9YEm+EfZ7McY0JaQSvTHGmJZrNtGLSKqIvC0im9ylxm5voI6IyP+JSJ6IfCoiZ/mU2ZqtPn74wx/So0cPTj/99Fr7Dxw4wMUXX0x6ejoXX3wx33zzDeC0wf/kJz8hLS2N4cOH8/HHH3sRtjGmlc14ZQa/WPmLVjm2P3f0lcDPVPU0nAWQbxOR0+rUmQiku685OEuy2ZqtDZg1axbLly+vt/+BBx5g/PjxbNu2jfHjx/PAAw8A8MYbb7Bt2za2bdvG/PnzueWWuoseGWNCXfGxYv6x+R9Ua+ss7tVsolfVQlX92H1fAmym/nJ8VwLPqmMt0EVEehNGa7bu2LGDIUOGMGvWLAYNGsT111/PqlWrGDt2LOnp6Xz00Ud+Hef888+na9eu9fa/+uqrzJzp/MEzc+ZMMjMzj++/8cYbERHGjBnDwYMHKSwsDNyFGWM8lxCTwPs/fJ9bz7m1VY7fouGV7opPZ+Ksj+mrsbVZ/V6zVUTm4Pw1QL9+/ZqM46c/hfXr/Y/bHyNHwkMPNV0nLy+Pl19+mYULF3LOOefw97//nXfffZesrCzuv/9+br/9du644456n4uPj+f9999v8th79uyhd29n8axevXqxZ88eAAoKCkhNPb7+NSkpKRQUFByva4wJfSLC2X3ObrXj+53o3TVbXwF+6q72FFCqOh9n8W8yMjKCcpL8gQMHcsYZZwAwbNgwxo8fj4hwxhlnsGPHDsaNG8f6AHwDiYiNpDGmnSivKufOFXdy81k3M6JXc4vmnRi/Er2IROMk+edV9R8NVCkAUn22U9x9BcAFdfavOZFAfTV3591aYmNjj7+PiIg4vh0REUFlZSVvv/32Cd/R9+zZk8LCQnr37k1hYSE9evQAoG/fvuzc+e0fRfn5+fTt2+AfRcaYEPT2l2/z6LpHmZA2odUSvT+jbgRYAGxW1QcbqZYF3OiOvhkDHFLVQtrZmq01d/R1X80leYArrriCRYsWAbBo0SKuvPLK4/ufffZZVJW1a9fSuXNna7YxJoxk5mbSMbojF51yUaudw587+rHADcBnIlLTLvEroB+Aqj4BLAMmAXnAEeA/3LIDIlKzZivYmq3MmDGDNWvWsG/fPlJSUvjNb37D7NmzmTdvHtdccw0LFiygf//+vPTSSwBMmjSJZcuWkZaWRnx8PE8//bTHV2CMCZRqrebVLa8yMX0icVFxrXaeoFwzNiMjQ+suPLJ582aGDh3qUUTBz34/xoSeD/M/ZMyCMTw39TmuH379SR1LRHJUNaOhMnsy1hhjPLKrZBf9OvdjUvqkVj1PyMxeaYwx4Wbq0KlMGTKl1UfZ2R29McZ44GjlUVS1TYZSW6I3xhgPPLT2Ifo91I+SYyWtfi5L9MYY44HM3Ex6depFQmxCq5/LEr0xxrSxXSW7+LDgQ6YOmdom57NE34Z27tzJuHHjOO200xg2bBgPP/zw8TKbptiY9iNrSxYAU4ZMaZPzWaJvQ1FRUfz5z39m06ZNrF27lkcffZRNmzYBNk2xMe1JZm4m6V3TGZrcNs++WKL3UyCmKe7duzdnneWsyZKQkMDQoUMpKCgAbJpiY9qT20ffzv3j72+zyQtDcxy9R/MUB3Ka4h07dvDJJ58wevRowKYpNqY9mZg+sU3PF5qJ3iOBmqa4tLSUq6++moceeojExMR65TZNsTHh66WNLzE0eShn9Dyjzc4Zmoneo3mKAzFNcUVFBVdffTXXX389V1111fE6Nk2xMeHvaOVRZmfN5rrTr+PJyU+22XlDM9EHqebu6FWV2bNnM3ToUO68885aZTXTFM+bN6/eNMWPPPII06dP58MPP7Rpio0JYau/XE1peWmbjbapYZ2xbei9997jb3/7G6tXr2bkyJGMHDmSZcuWATBv3jxWrlxJeno6q1atYt68eYAzTfEpp5xCWloaN998M4899piXl2CMOQmZuZl0iunEhQMvbNPz2jTFYcJ+P8YEt6rqKvo82IcLBlzAi9NeDPjxm5qmuNmmGxFZCFwO7FXV0xso/zlQM5FyFDAU6O4uOrIDKAGqgMrGgjDGmHC37cA2io8Vt9nTsL78aaN/BngEeLahQlX9E/AnABGZDNxRZxWpcaq67yTjNMaYkDYkeQj7fr6PyIjINj93s4leVf8tIgP8PN4M4IWTCcgYY8JVx5iOnpw3YJ2xIhIPTABe8dmtwJsikiMic5r5/BwRyRaR7KKiokCFZYwxntu4dyNnzz+bnF05npw/kKNuJgPv1Wm2OU9VzwImAreJyPmNfVhV56tqhqpmdO/ePYBhGWOMtzJzM/m48GN6J3gzNDqQiX46dZptVLXA/bkXWAqMCuD5jDEmJGRuyWRMyhj6JPTx5PwBSfQi0hn4HvCqz76OIpJQ8x64BPg8EOcLVUePHmXUqFGMGDGCYcOGcc899xwv+/LLLxk9ejRpaWlce+21lJeXA3Ds2DGuvfZa0tLSGD16NDt27PAoemPMidh5aCfZu7KZMrhtH5Ly1WyiF5EXgA+AwSKSLyKzReRHIvIjn2pTgTdV9bDPvp7AuyKyAfgI+KeqLg9k8KEmNjaW1atXs2HDBtavX8/y5ctZu3YtAHfddRd33HEHeXl5JCUlsWDBAgAWLFhAUlISeXl53HHHHdx1111eXoIxpoVe3eLc/7b107C+mk30qjpDVXurarSqpqjqAlV9QlWf8KnzjKpOr/O57ao6wn0NU9Xft8YFtJVATFMsInTq1Alw5rypqKhARFBVVq9ezbRp04D60xTXTF88bdo03nrrLYLxITdjTMNOTTqVOWfNYXDyYM9iCNm5bi545oJ6+64Zdg23nnMrRyqOMOn5SfXKZ42cxayRs9h3ZB/TXppWq2zNrDXNnjMQ0xRXVVVx9tlnk5eXx2233cbo0aPZt28fXbp0ISrK+eeomYoYak9THBUVRefOndm/fz/JycnNxmuM8d7E9IltPi1xXSGb6L0QiGmKIyMjWb9+PQcPHmTq1Kl8/vnn9OrVqy3CN8a0sa37t9IpppNnnbA1QjbRN3UHHh8d32R5cnyyX3fwdQVimuIaXbp0Ydy4cSxfvpyf/exnHDx4kMrKSqKiompNRVwzTXFKSgqVlZUcOnSIbt26tTh2Y0zb++Vbv+TD/A/ZecdOT9eYCNlEH4yau6MvKioiOjqaLl26UFZWxsqVK7nrrrsQEcaNG8eSJUuYPn16vWmKFy1axLnnnsuSJUu48MILbVESY0JAWUUZy/OWM3PETM//n7VE34YKCwuZOXMmVVVVVFdXc80113D55ZcD8Ic//IHp06dz9913c+aZZzJ79mwAZs+ezQ033EBaWhpdu3Zl8eLFXl6CMcZPq7av4kjFEU9H29SwaYrDhP1+jAkus1+dzZLNSyj6eRExkTGtfr6mpim2hUeMMSbAqrWa17e9zmXpl7VJkm+ONd0YY0yARUgEn/znJxypOOJ1KECIJXpV9bxTIxgFY/ObMe2d10MqfYVM001cXBz79++3pFaHqrJ//37i4uK8DsUYg/P/5OxXZ7Mib4XXoRwXMnf0KSkp5OfnY3PV1xcXF0dKSorXYRhjgM/3fs7C9QsZkzLG61COC5lEHx0dzcCBA70OwxhjmpSZm4kgTB482etQjguZphtjjAkFmVsyOTf1XHp1Cp6pTSzRG2NMgHx18Cs+LvzY07nnG2KJ3hhjAmTP4T2c1fusoHga1pc/C48sFJG9ItLg6lAicoGIHBKR9e7r1z5lE0Rki4jkici8QAZujDHBZlTfUeTMySG9W7rXodTizx39M8CEZuq8o6oj3dd9ACISCTyKszD4acAMETntZII1xphgVVZRFjQPSNXlzwpT/wYOnMCxRwF57kpT5cBi4MoTOI4xxgS9lza+RPIfk/niwBdeh1JPoNrozxWRDSLyhogMc/f1BXb61Ml39zVIROaISLaIZNtYeWNMqMnckkm3+G6cknSK16HUE4hE/zHQX1VHAH8BMk/kIKo6X1UzVDWje/fuAQjLGGPaxpGKI6zIW8GUwVOCcpqWk070qlqsqqXu+2VAtIgkAwVAqk/VFHefMcaElZVfrKSssizoRtvUOOlELyK9xP0KE5FR7jH3A+uAdBEZKCIxwHQg62TPZ4wxwWZp7lK6xHXh/P7nex1Kg5qdAkFEXgAuAJJFJB+4B4gGUNUngGnALSJSCZQB09WZeaxSROYCK4BIYKGqbmyVqzDGGA/dee6dTB40mejIaK9DaVDIrDBljDGmcbbClDHGtJIXP3+RN7940+swmmSJ3hhjTpCqctequ3jko0e8DqVJluiNMeYEbdizga8OfRW0o21qWKI3xpgTlJmbSYREMHlQ8Mw93xBL9MYYc4KW5i5lbOpYuncM7oc8LdEbY8wJOHj0IPuO7Av6ZhsIoaUEjTEmmHSJ68LOO3ZSUVXhdSjNsjt6Y4w5AapKhEQQGxXrdSjNskRvjDEtVHS4iH4P9eO1La95HYpfLNEbY0wLvb71dfKL80lJTPE6FL9YojfGmBbK3JJJv879GNlrpNeh+MUSvTHGtMDh8sO8+cWbQTv3fEMs0RtjTAus+GIFRyuPMnXoVK9D8ZslemOMaYGBXQYy95y5nNfvPK9D8ZuNozfGmBY4s/eZ/KX3X7wOo0Xsjt4YY/y0bf82cnblEIzreDSl2UQvIgtFZK+IfN5I+fUi8qmIfCYi74vICJ+yHe7+9SJiK4kYY0La/334f5z39HkcqTjidSgt4s8d/TPAhCbKvwS+p6pnAL8F5tcpH6eqIxtb+cQYY0KBqpK5JZNLT72UjjEdvQ6nRZpN9Kr6b+BAE+Xvq+o37uZaIDSeIDDGmBb4uPBj8ovzQ2ISs7oC3UY/G3jDZ1uBN0UkR0TmNPVBEZkjItkikl1UVBTgsIwx5uSEytzzDQnYqBsRGYeT6H3HHJ2nqgUi0gNYKSK57l8I9ajqfNxmn4yMjNDq6TDGhL0VX6zg/P7n0y2+m9ehtFhAEr2IDAeeAiaq6v6a/apa4P7cKyJLgVFAg4neGGOC2ZpZa9hTusfrME7ISTfdiEg/4B/ADaq61Wd/RxFJqHkPXAI0OHLHGGOCXXx0PAOTBnodxglp9o5eRF4ALgCSRSQfuAeIBlDVJ4BfA92Ax9x5HyrdETY9gaXuvijg76q6vBWuwRhjWtXNWTczOmU0N511k9ehnJBmE72qzmim/Cag3tWr6nZgRP1PGGNM6NhTuocFnywImSmJG2JPxhpjTBNe2/oaiobksMoaluiNMaYJS3OXMrDLQIb3HO51KCfMEr0xxjSi5FgJq7avYsqQ0Jl7viGW6I0xphH7y/Zz6amXcvXQq70O5aTYNMXGGNOIAV0GkDUjy+swTprd0RtjTAMqqiooKC7wOoyAsERvjDENWLNjDSn/m8KaHWu8DuWkWaI3xpgGZOZmEh8dz+i+o70O5aRZojfGmDqqtZrMLZlMSJtAh+gOXodz0izRG2NMHdm7stlVsospg0P3ISlfluiNMaaOzNxMIiWSywZd5nUoAWHDK40xpo4fj/oxY1LG0LVDV69DCQi7ozfGmDp6J/TmisFXeB1GwFiiN8YYH69seoX5OfNRDZ+F7izRG2OMjz9/8Gfm58wP6blt6vIr0YvIQhHZKyINrhAljv8TkTwR+VREzvIpmyki29zXzEAFbowxgVZYUsgH+R+E9JTEDfH3jv4ZYEIT5ROBdPc1B3gcQES64qxINRpnvdh7RCTpRIM1xpjWlLXFmdemXSZ6Vf03cKCJKlcCz6pjLdBFRHoDlwIrVfWAqn4DrKTpLwxjjPFM5pZM0rqmMaz7MK9DCahAtdH3BXb6bOe7+xrbX4+IzBGRbBHJLioqClBYxhjjn2qtpvhYMVMGh/bc8w0JmnH0qjofmA+QkZERPt3dxpiQECERvPfD96jWaq9DCbhA3dEXAKk+2ynuvsb2G2NMUKmsrgSchB9uAnVFWcCN7uibMcAhVS0EVgCXiEiS2wl7ibvPGGOCxrHKY/R9sC9/+fAvXofSKvxquhGRF4ALgGQRyccZSRMNoKpPAMuASUAecAT4D7fsgIj8FljnHuo+VW2qU9cYY9rc2zveZu/hvZySdIrXobQKvxK9qs5oplyB2xopWwgsbHloxhjTNjJzM+kU04nxp4z3OpRWEX6NUcYY0wLVWs2rW15lYtpE4qLivA6nVViiN8a0ax8VfMTu0t1h95CUL0v0xph2rW9CX+753j1MSp/kdSitJmjG0RtjjBdSO6dy7wX3eh1Gq7I7emNMu/X1oa/J2pLF0cqjXofSqizRG2Parec/fZ4rF1/JviP7vA6lVVmiN8a0W5lbMjmnzzmkJKZ4HUqrskRvjGmXCooL+KjgI6YOmep1KK3OEr0xpl0K17nnG2KJ3hjTLr3z9TsM6jaIIclDvA6l1dnwSmNMu/T8Vc+zu3R32M093xC7ozfGtEsiQu+E3l6H0SYs0Rtj2p25y+by32/9t9dhtBlL9MaYduVo5VEWbVjE/rL9XofSZizRG2Palbe2v0VpeWm7GG1TwxK9MaZdyczNJCEmgXEDxnkdSpvxK9GLyAQR2SIieSIyr4Hy/xWR9e5rq4gc9Cmr8inLCmTwxhjTElXVVWRtzWJS+iRio2K9DqfNNDu8UkQigUeBi4F8YJ2IZKnqppo6qnqHT/0fA2f6HKJMVUcGLmRjjDkxpeWlXDXkKi4bdJnXobQpf8bRjwLyVHU7gIgsBq4ENjVSfwbOmrLGGBNUOsd15vHLH/c6jDbnT9NNX2Cnz3a+u68eEekPDARW++yOE5FsEVkrIo32fojIHLdedlFRkR9hGWOM/1SVTwo/oVqrvQ6lzQW6M3Y6sERVq3z29VfVDOA64CERObWhD6rqfFXNUNWM7t27BzgsY0x7t6loE2fNP4tn1j/jdShtzp9EXwCk+mynuPsaMh14wXeHqha4P7cDa6jdfm+MMW1iae5SBGFi2kSvQ2lz/iT6dUC6iAwUkRicZF5v9IyIDAGSgA989iWJSKz7PhkYS+Nt+8YY02oyczMZkzKm3Ux74KvZRK+qlcBcYAWwGXhJVTeKyH0icoVP1enAYlVVn31DgWwR2QC8DTzgO1rHGGPaws5DO8kpzGlXD0n58mv2SlVdBiyrs+/XdbbvbeBz7wNnnER8xhhz0l7d8irQPuaeb4hNU2yMCXuzz5zNkOQhDOo2yOtQPGFTIBhjwl6H6A5cdMpFXofhGUv0xpiwtmzbMu55+x7KKsq8DsUzluiNMWFtwScLeOqTp9rV3DZ1WaI3xoStsooyluctZ8rgKURI+0137ffKjTFhb9X2VRypONJuR9vUsERvjAlbmbmZdI7tzPcGfM/rUDxlid4YE7ZEhGmnTSMmMsbrUDxl4+iNMWHrqSue8jqEoGB39MaYsFRaXup1CEHDEr0xJuyoKiOeGMHtb9zudShBwRK9MSbsfLb3M7Z/s50zetpUW2CJ3hgThjJzMxGEyYMmex1KULBEb4wJO0tzl/Kd1O/Qs1NPr0MJCpbojTFhZcfBHazfvb7dPyTly69ELyITRGSLiOSJyLwGymeJSJGIrHdfN/mUzRSRbe5rZiCDN8aYupLikvjr5L/y/dO+73UoQaPZcfQiEgk8ClwM5APrRCSrgZWiXlTVuXU+2xW4B8gAFMhxP/tNQKI3xpg6Osd15qazbmq+Yjvizx39KCBPVberajmwGLjSz+NfCqxU1QNucl8JTDixUI0xpmn7j+zn8XWPs//Ifq9DCSr+JPq+wE6f7Xx3X11Xi8inIrJERFJb+FlEZI6IZItIdlFRkR9hGWNMba9tfY1bl93KV4e+8jqUoBKoztjXgAGqOhznrn1RSw+gqvNVNUNVM7p37x6gsIwx7Ulmbiapiamc2etMr0MJKv4k+gIg1Wc7xd13nKruV9Vj7uZTwNn+ftYYYwLhSMUR3vziTaYMmYKIeB1OUPEn0a8D0kVkoIjEANOBLN8KItLbZ/MKYLP7fgVwiYgkiUgScIm7zxhjAmpF3grKKstsWGUDmh11o6qVIjIXJ0FHAgtVdaOI3Adkq2oW8BMRuQKoBA4As9zPHhCR3+J8WQDcp6oHWuE6jDHt3IY9G+jaoSvf7fddr0MJOqKqXsdQT0ZGhmZnZ3sdhjEmxBQfKyYxNtHrMDwhIjmqmtFQmT0Za4wJG+01yTfHEr0xJuTdtfIupr00jWBsoQgGluiNMSFNVVm8cTEV1RU22qYRluiNMSFt/e71fH3oa6YMttE2jbFEb4wJaUtzlxIhEVw+6HKvQwlaluiNMSEtMzeT8/qdR/eO9kR9Y5odR2+MMcGqqrqKa4ZdQ1rXNK9DCWqW6I0xISsyIpK7z7/b6zCCnjXdGGNC1r92/IsjFUe8DiPoWaI3xoSkosNFXPjshfzxvT96HUrQs0RvjAlJr219jWqttknM/GCJ3m3GtnwAAA8hSURBVBgTkjJzM+nfuT8jeo7wOpSgZ4neGBNySstLbe75FrBEb4wJOau/XM2xqmNMHTLV61BCgg2vNMaEnMmDJpMzJ4fhPYd7HUpI8OuOXkQmiMgWEckTkXkNlN8pIpvcxcHfEpH+PmVVIrLefWXV/awxxrSUiHBW77OIigize9XKylY5bLOJXkQigUeBicBpwAwROa1OtU+ADHdx8CWA73inMlUd6b6uCFDcxph26t2v3+XmrJvZU7rH61ACQxXeeQemT4exY53tAPPnjn4UkKeq21W1HFgMXFk7Tn1bVWueWliLswi4McYE3OLPF/P8Z8+TEJvgdSgnp7QUnngCRoyA88+HFSucRF9eHvBT+ZPo+wI7fbbz3X2NmQ284bMdJyLZIrJWRGzAqzHmhKkqmbmZXJp2KfHR8V6Hc2I2b4af/AT69oVbboGoKHjqKSgogAcfhNjYgJ8yoA1cIvIDIAP4ns/u/qpaICKnAKtF5DNV/aKBz84B5gD069cvkGEZY8JETmEOBSUF/H7w770OpWUqKyErCx59FFavhpgYuOYauPVWGDMGWnmIqD+JvgBI9dlOcffVIiIXAf8NfE9Vj9XsV9UC9+d2EVkDnAnUS/SqOh+YD87i4P5fgjGmvcjMzSRSIkNn7vndu+Gvf4Unn3Tu2Pv1g/vvh9mzoUePNgvDn0S/DkgXkYE4CX46cJ1vBRE5E3gSmKCqe332JwFHVPWYiCQDY6ndUWuMMX7rFNOJa0+/lm7x3bwOpXGq8O678Nhj8MorUFEBl1zibF92GURGtnlIzSZ6Va0UkbnACiASWKiqG0XkPiBbVbOAPwGdgJfdp9S+dkfYDAWeFJFqnP6AB1R1UytdizEmzM07r97o7uBRWgrPP+80z3z2GXTpAnPnwo9+BIMGeRqaBOOq6RkZGZqdne11GMaYILL38F6S45OJkCB7oD8317lbX7QIioth5Ei47TaYMQM6dmyzMEQkR1UzGioLs6cNjDHhauqLU+kU04kVP1jhdSjfdq4+9hi89ZbTufr97zsJvg06V1sqyL4ajTGmvt2lu/lg5weMTR3rcSC74Xe/g4ED4eqrYetW+P3vYedOeO45OPfcoEvyYHf0xpgQ8NqW11DUm7nnVeG995y295rO1YsvhkcecTpXo4I/jQZ/hMaYdm9p7lIGdhnIGT3OaLuT1nSuPvYYfPopdO7sNM3ccovnnastZYneGBPUio8V89aXbzH3nLltM/f8li1Ocn/mGadzdcQImD8frruuTTtXA8kSvTEmqHWI6sDSa5dyStIprXeSykp47TWneeattyA6+tvO1SBtd28JS/TGmKAWHRnNpPRJrXPwPXuceWaefNLpUE1NdTpXZ8+Gnj1b55wesFE3xpigVV5Vzr1r7uWLA/VmTTlxNZ2r113nJPa774bBg2HpUti+HX71q7BK8mB39MaYILZmxxp+86/fkNEng1O7nnpyBzt8+NvO1Q0bnM7VW291OlcHDw5MwEHKEr0xJmhl5mbSMboj4weOP/GDbNkCjz/udK4eOgTDhztNNddfH7Kdqy1lid4YE5SqtZrM3EwmpE2gQ3SHln24shJef93pXF21yulcnTbN6Vz9zndCvnO1pSzRG2OC0rqCdRSWFrbsIam6naspKc6TrDfdFHbt7i1hid4YE5S27t9KYmwil6Vf1nRFVXj/fefufckS58nViy6Chx+GyZND4snV1mazVxpjglZ5VTkxkTENFx4+DH//u5PgN2yAxESYNcvpXB0ypE3jDAY2e6UxJiSoKmWVZRw6eojk+OSGk/zWrd8+uerbuXrdddCpU5vHHAos0RtjTlpFVQXFx4qPv0rKS6jWas7vfz4Aiz9fzOaizZSUlxwv792pNw9NeAiASc9PYm3+WoqPFVOlVQCc2etM3vvhe05HbE3n6mOPwcqVTufq1Vc7natjx7a7ztWW8ivRi8gE4GGcFaaeUtUH6pTHAs8CZwP7gWtVdYdb9ktgNlAF/ERVg2AyaWNMVXUVERKBiFBQXMDO4p21kvWRiiPMHTUXgKc/eZqV21ceT9LFx4qJiohi3c3rALh2ybUszV1a6/ipial8fcfXACzasIjlecvpFNOJxNhEEmMTa9U9r995nJp0KomxiSTEJpAYm8jgboPp8E0JPPW/8MQT33au/va3Tudqr15t8FsKD8220YtIJLAVuBjIx1lDdobvkoAiciswXFV/JCLTgamqeq2InAa8AIwC+gCrgEGq7ld2I6yN3piGqSqHKw47CfdYCQO6DCA2Kpat+7eyNn8tJcdKaiXr31/4O7rEdubpjxfyaM7jTnl5MSXlpc5xbtpOQmQH/uv9e/nzZ0/WO1/FVeuJIoJ5nz7IK7veIjGqIwmRHUiMjKdbVCJPD/4FVFWRte89dpQVkihxJEocCRJLknQgI2YgVFdTVlFGbLUQoUBVlfOqrm76/aZN8PLLTufq+PHOw01XXFGvc7WmemXlt4fwZ/tEPtPa2wkJzpD/E9FUG70/if5c4F5VvdTd/iWAqv6PT50Vbp0PRCQK2A10B+b51vWt19Q5TzTRZ/Yfxs8n139U+q63e3DBFwms73OEX04qrFd+74pejN7ZkQ/6H+a+i3fXK//j6304Y3cHVqeV8KcL9tYr/8vSFNL2x/LPoYd4ZOy+euVPvZRK3+IYXh7+DQtHHahX/vzz/elaFsWzZx/ghTO/qVf+j2cG0qEygifH7CPz9EO1ygRY9pTzxODD393L8sEltcrjK4RXFjmTQT1w4W7+dcrhWuXdjkTy3N8HAPDrSwtZl3qkVnnKoWj++nI/AH5+eQGf9zpaq3xQUSwPv5oCwG1Td7K9W3mt8uGFcfzhn30BmH3NV+xKrKxVPubreO55szcAM67fwTfxtcvH5SVw19vOsLgps7ZzNLq6VvmkzYnc/k53qlEm/Od26pq2oQtz1najNKaKqf+xo175jdlJ3JCTxL6OlUz/wVf1yn/0QTemfdqFr7qU8x/Td9Yr/9m/krl8cyK53Y9yy7Rd9cr/38oeXJjXiZy+Zdx5Zf3yB/7Zi+98Fc87Aw7zq0l76pX/JbM3I3d14J9DivnVpD0cjlGqfSYu+deTSQzfIyzIOMJ/Tfr23yaqChKPQc58GHAQXjgd/jbC2Zd4DBLcn//1PnSsgI3dYWfnb/cnlDs/k8qc/8a8UCyJvBw/k6fjbmWLDGk0SQa7iAhnPfCoKOdnzauh7R49nAFEJ+JkO2P7Ar7/hecDoxur4y4mfgjo5u5fW+ezfRsJcg4wB6Bfv35+hFXfsc5ppJYcqre/Ku5UipKTOdrxEKklFfXKyzumUZScRHmHA6SWVNYrL+uUTlFyIlVxRaSWVNcrP5w4iCLpiMbsJrWkXjHFnQcTE9OBiOhdpJbUn17om6QhVHWMITpyJ6kl9VeI399tKLFVkcTKDlJLan9RCUJR8mkAdCCW1JLaX0RxlVHHyztWR5Fasr9WeeKxmOPlnSsjSC2p/UWTfLTD8fKkCiW1pLhWedfyTsfLk49VUlFS+4skqaLz8fIeR48RKbW/KBKqkihKdkZI9D5SRmJl7X+fTtXdKEpOByCltJSKyNq//3h6srfHKVSjDDxY+9wAcRG92dujP0cjKzn1YFm98ujIVPb0SKE49hjp35TXK4+M6s+eHr0piS9jyIFK6qY9iR1IYc+elCaUMnR/vY9T1SGNwp7JHOt0iNOL6v/bV8QPZlfPJCrjDzB8b3S98qOdTmNXz0Q6RB7g0i++okNFDPEVsXSodF57u/Tjw44dST1cwVNZ5cRVdiC2sgORGgMSSU7fSNalRBIpEdz4WSTVEolKBNXivH95+LfvfffXeh8Rgbrvq3H3R0RCI/WrJRIimj6uRvgcq5H6GhlFRFQEwyJhhB9J0nfb38Ta2tsREcHRfeDPHf00YIKq3uRu3wCMVtW5PnU+d+vku9tf4HwZ3AusVdXn3P0LgDdUdUlT57SmG2OMaZmm7uj9mb2yAEj12U5x9zVYx2266YzTKevPZ40xxrQifxL9OiBdRAaKSAwwHciqUycLmOm+nwasVudPhSxguojEishAIB34KDChG2OM8UezbfRum/tcYAXO8MqFqrpRRO4DslU1C1gA/E1E8oADOF8GuPVeAjYBlcBtzY24McYYE1g2BYIxxoSBk22jN8YYE8Is0RtjTJizRG+MMWHOEr0xxoS5oOyMFZEioP7z6P5JBurPQxDe7JrDX3u7XrBrbqn+qtq9oYKgTPQnQ0SyG+t5Dld2zeGvvV0v2DUHkjXdGGNMmLNEb4wxYS4cE/18rwPwgF1z+Gtv1wt2zQETdm30xhhjagvHO3pjjDE+LNEbY0yYC5tELyITRGSLiOSJyDyv42kLIrJQRPa6C7+EPRFJFZG3RWSTiGwUkdu9jqm1iUiciHwkIhvca/6N1zG1FRGJFJFPROR1r2NpCyKyQ0Q+E5H1IhLQWR3Doo3enwXMw5GInA+UAs+q6ulex9PaRKQ30FtVPxaRBCAHmBLO/84iIkBHVS0VkWjgXeB2VV3bzEdDnojcCWQAiap6udfxtDYR2QFkqGrAHxILlzv6UUCeqm5X1XJgMXClxzG1OlX9N878/+2Cqhaq6sfu+xJgM42sQRwu1FHqbka7r9C/O2uGiKQAlwFPeR1LOAiXRN/QAuZhnQDaOxEZAJwJfOhtJK3PbcJYD+wFVqpq2F8z8BDwC6C6uYphRIE3RSRHROYE8sDhkuhNOyIinYBXgJ+qarHX8bQ2Va1S1ZE4ay6PEpGwbqYTkcuBvaqa43Usbew8VT0LmAjc5jbNBkS4JHpbhLydcNupXwGeV9V/eB1PW1LVg8DbwASvY2llY4Er3DbrxcCFIvKctyG1PlUtcH/uBZbiNEkHRLgken8WMDchzu2YXABsVtUHvY6nLYhIdxHp4r7vgDPgINfbqFqXqv5SVVNUdQDO/8urVfUHHofVqkSkozvAABHpCFwCBGw0XVgkelWtBGoWMN8MvKSqG72NqvWJyAvAB8BgEckXkdlex9TKxgI34NzhrXdfk7wOqpX1Bt4WkU9xbmhWqmq7GG7YzvQE3hWRDcBHwD9VdXmgDh4WwyuNMcY0Lizu6I0xxjTOEr0xxoQ5S/TGGBPmLNEbY0yYs0RvjDFhzhK9McaEOUv0xhgT5v4/GdaoNLfuDqQAAAAASUVORK5CYII="/>
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-e6300310-f348-4101-b084-18b0c53d5662" ><span id="id-e6300310-f348-4101-b084-18b0c53d5662"><img id="img-id-e6300310-f348-4101-b084-18b0c53d5662"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-91c2170b-e169-4d75-8b79-c8aee742b3db" ><span id="id-91c2170b-e169-4d75-8b79-c8aee742b3db"><img id="img-id-91c2170b-e169-4d75-8b79-c8aee742b3db" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+<section id="slide_00028_frag_00001" data-state="slide_00028_frag_00001">
+
+
+<!-- Header -->
+  
+
+<!-- Background -->
+
+
+<!-- Slide -->
+<div class="jb-slide">
+
+<div class="jb-output-code jb-render">
+
+<!-- start embedded style -->
+
+<!-- end embedded style -->
+<div class="jb-output jb-render">
+<div class="document" id="chunking">
+<h1 class="title">Chunking</h1>
+<div class="jb-text docutils container">
+<p>Solution depends on the support vectors and the misclassified instances only</p>
+<p>But Q Matrix grows quadratically in the number of instances</p>
+<p>Remove instances from training set to</p>
+<ul class="simple">
+<li>Hope that it includes the support vectors and misclassified instances</li>
+<li>Solve reduce problem</li>
+</ul>
+</div>
+</div>
+
+</div><!-- end of jb-output jb-render -->
+</div><!-- end of jb-output-code jb-render -->
+
+
+</div>
+<!-- Footer -->
+
+<div class="jb-footer-left plain">
+    <span id="id-a20bc999-483e-4c11-b472-479d8bc842f5" ><span id="id-a20bc999-483e-4c11-b472-479d8bc842f5"><img id="img-id-a20bc999-483e-4c11-b472-479d8bc842f5"     src="assets/images/logo.png"/></span>
+</span>
+
+</div>
+<div class="jb-footer-right plain">
+    <span id="id-7d1cdf31-f27e-4404-ad7b-f418927a7e8a" ><span id="id-7d1cdf31-f27e-4404-ad7b-f418927a7e8a"><img id="img-id-7d1cdf31-f27e-4404-ad7b-f418927a7e8a" width="162" height="138"   src="assets/images/robbi.png"/></span>
+</span>
+
+</div>
+
+<aside class="notes">
+
+</aside>
+
+
+
+</section>
+        </div>
+        </div>
+
+        <script src="js/reveal.js"></script>
+
+        <script>
+            // More info about config & dependencies:
+            // - https://github.com/hakimel/reveal.js#configuration
+            // - https://github.com/hakimel/reveal.js#dependencies
+            Reveal.initialize({
+                math: {
+                    mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+                    config: 'TeX-AMS_HTML-full',  // See http://docs.mathjax.org/en/latest/config-files.html
+                    // tex2jax: {
+                    //     inlineMath: [['$', '$'], ['\(', '\)']],
+                    //     displayMath: [['$$', '$$'], ['\[', '\]']],
+                    //     processEscapes: true,
+                    //     processEnvironments: true,
+                    //     skipTags: ['script', 'noscript', 'style', 'textarea', 'code', 'pre'],
+                    //     displayAlign: 'center',
+                    // }                
+                },
+                dependencies: [
+                    { src: 'plugin/markdown/marked.js' },
+                    { src: 'plugin/markdown/markdown.js' },
+                    { src: 'plugin/notes/notes.js', async: true },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/math/math.js', async: true }
+                ]
+            });
+        </script>
+
+        <script>
+            <!-- Assets -->
+var assets = {
+"robbi" : new JBImage( "robbi", "12677", "162", "138", null, null, "assets/images/robbi", "png" ),
+"logo" : new JBImage( "logo", "12033", "0", "0", null, null, "assets/images/logo", "png" ),
+"fira-logo-1" : new JBImage( "fira-logo-1", "93836", "0", "0", null, null, "assets/images/FIRA-logo-1", "png" ),
+"pairLogo" : new JBImage( "pairLogo", "63051", "0", "0", null, null, "assets/images/pairLogo", "png" ),
+"d1" : new JBImage( "d1", "17133", "0", "0", null, null, "assets/images/d1", "svg" ),
+"d2" : new JBImage( "d2", "22779", "0", "0", null, null, "assets/images/d2", "svg" ),
+"d3" : new JBImage( "d3", "628980", "0", "0", null, null, "assets/images/d3", "svg" ),
+"m1" : new JBImage( "m1", "54498", "0", "0", "https://i.postimg.cc/QxBfhLfG/image.png", null, "assets/images/m1", "png" ),
+"d4" : new JBImage( "d4", "29978", "0", "0", null, null, "assets/images/d4", "svg" ),
+"sm1" : new JBImage( "sm1", "61491", "0", "0", "https://i.postimg.cc/KzVhv6gK/image.png", null, "assets/images/sm1", "png" ) 
+};
+var assetInstances = {
+    "id-38e39375-5b62-41c2-b252-466cb2d73ac7": assets["robbi"],
+    "id-7b8e2e44-87a0-4d5a-b08d-20fd6d4f56d1": assets["robbi"],
+    "id-36f577ef-b9ac-4ef8-9214-ce00361188b9": assets["robbi"],
+    "id-6b866a9f-bff5-43a9-9c37-557fae7f1466": assets["robbi"],
+    "id-987c86b2-eaf3-4b56-9e17-a55d97d85b62": assets["robbi"],
+    "id-3d90a31a-e06a-4d70-a71b-863a2aa3b734": assets["robbi"],
+    "id-e410944b-602d-4028-9e3e-f58fc8c92651": assets["robbi"],
+    "id-d91698a6-0439-4500-a2c4-08f779f604d7": assets["robbi"],
+    "id-7aa6ae40-cdf6-4093-8c77-a7242c4f4228": assets["robbi"],
+    "id-0cfdadfb-a71c-43c9-bc5b-e387fea4231d": assets["robbi"],
+    "id-81946d5c-efc3-459f-a77a-294e00e9c4d9": assets["robbi"],
+    "id-705fada4-1799-429f-b22a-8e198ef10f99": assets["robbi"],
+    "id-bec80bb4-d939-4141-8abd-970d715bed94": assets["robbi"],
+    "id-4beafec1-e2a7-487d-82fe-a3f18271159e": assets["robbi"],
+    "id-b04b631e-6ced-4f66-b8c5-a6c0af1539b8": assets["robbi"],
+    "id-d7987020-125b-4f6a-bde7-6b9ae6522f7f": assets["robbi"],
+    "id-f061eaac-6ce1-468c-ae38-090b7cbcbb35": assets["robbi"],
+    "id-57284e52-7861-4594-9295-392710d1d30d": assets["robbi"],
+    "id-5d279e34-f272-4d86-bdac-dd0f2e0c7ade": assets["robbi"],
+    "id-6c007851-b35f-42c9-8e53-8c76643a3149": assets["robbi"],
+    "id-836f8587-b241-43e7-8007-6afdc2d255c0": assets["robbi"],
+    "id-4a37c066-17c0-48f1-8baa-40303a5fb308": assets["robbi"],
+    "id-3d7b4210-d526-4adb-9e15-42526e41f154": assets["robbi"],
+    "id-d89001f9-5100-4abb-bb29-f7667fe1ac5f": assets["robbi"],
+    "id-3d07c74b-597b-4790-b264-3cfca78fdfdb": assets["robbi"],
+    "id-91c2170b-e169-4d75-8b79-c8aee742b3db": assets["robbi"],
+    "id-7d1cdf31-f27e-4404-ad7b-f418927a7e8a": assets["robbi"],
+    "id-91479229-4d25-4e18-bef7-b80eedbdac80": assets["logo"],
+    "id-301d8ad4-ca2d-4eaa-b537-3aefcf98b664": assets["logo"],
+    "id-b4190dfd-1931-422d-b788-0d94d07fea35": assets["logo"],
+    "id-c3a4c875-2bed-45d5-a64c-049ed86e7c74": assets["logo"],
+    "id-f0670cf3-dd17-43a9-a623-68babd38c1aa": assets["logo"],
+    "id-9b84d294-65bc-494c-9d0b-8d9d39bb0785": assets["logo"],
+    "id-b759a691-5c97-4d76-b96b-7d69a48a9955": assets["logo"],
+    "id-7ec8653c-3808-495e-b3d6-2bf34d1893fe": assets["logo"],
+    "id-a8d71ff9-aa19-4d3c-ae2f-5b3a2b3df840": assets["logo"],
+    "id-9b4bb36d-ba3c-4761-a8d9-abbeacc9a07d": assets["logo"],
+    "id-947b1541-283a-4c3f-95de-18ebba35458b": assets["logo"],
+    "id-53723377-2bba-4200-8f08-b89a8f0346f6": assets["logo"],
+    "id-c1cc83b2-be3c-41c7-b6c7-e059309d26e1": assets["logo"],
+    "id-e1099f4b-c373-492f-83fc-c8d4ec5b4977": assets["logo"],
+    "id-037bbccf-7018-48d6-ad7a-dbf15ba22ead": assets["logo"],
+    "id-9007f3ad-2170-4036-b9b4-1f4396aef17f": assets["logo"],
+    "id-daaa55d8-5561-467a-925c-77387ac2df5b": assets["logo"],
+    "id-dd7e45b8-9ac1-4ccd-a27d-97afee50f99f": assets["logo"],
+    "id-fd26a68d-afc7-4a59-8755-5983d3c27cb7": assets["logo"],
+    "id-b799d161-9319-4a2f-a7b7-fb60cf970f4a": assets["logo"],
+    "id-dae85363-0825-41aa-8b8a-1a01ba090102": assets["logo"],
+    "id-5565d4bf-54bf-4e43-871c-70a5bfd861ef": assets["logo"],
+    "id-87429030-3bb8-4a3e-988a-092bf4b65186": assets["logo"],
+    "id-cf313f46-8532-4976-9b23-835f50a71af4": assets["logo"],
+    "id-a287370f-12c5-4a41-bad4-615e11ae75ad": assets["logo"],
+    "id-e6300310-f348-4101-b084-18b0c53d5662": assets["logo"],
+    "id-a20bc999-483e-4c11-b472-479d8bc842f5": assets["logo"],
+    "id-ed0e3dd6-7db6-45b8-a04e-2cb3166558e8": assets["d1"],
+    "id-cd3dcee7-45b1-4970-a8b4-4135439b006f": assets["d2"],
+    "id-b4f249b3-6771-486b-b1f5-8f77b058de2b": assets["d3"],
+    "id-77b94a39-41fd-487a-96bc-cf973b129e5c": assets["m1"],
+    "id-e1b73c7d-cdce-43ca-ab06-1fe47bf433a5": assets["d4"],
+    "id-f8593083-a377-48b2-a92e-7bbcd29e7cac": assets["sm1"]
+};
+<!-- End of Assets -->
+
+            convertURLs(assetInstances, "smart-path");
+        </script>
+        <script>
+            <!-- Characters -->
+var characters =
+{};
+<!-- End of Characters -->
+
+        </script>
+    </body>
+</html>
